@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Base de Figuras</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+    <h1>Registros de Figuras (Realtime Database)</h1>
+
+    <table id="tablaFiguras">
+        <thead>
+            <tr>
+                <th>Fecha y Hora</th>
+                <th>Figura</th>
+                <th>Dimensión (2D/3D)</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla">
+            <tr><td colspan="3" style="text-align: center;">Cargando datos...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        // 1. Configuración de tu proyecto de Firebase
+        // Solo con la URL de la base de datos es suficiente si tus reglas de lectura son públicas.
+        const firebaseConfig = {
+            databaseURL: "https://base-de-datos-b989a-default-rtdb.firebaseio.com"
+        };
+
+        // 2. Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 3. Hacer referencia al nodo exacto que tienes en tu imagen ('Basedefiguras')
+        const refFiguras = database.ref('Basedefiguras');
+
+        // 4. Leer los datos en tiempo real (cada vez que se agregue algo, la tabla se actualiza sola)
+        refFiguras.on('value', (snapshot) => {
+            const tbody = document.getElementById('cuerpoTabla');
+            tbody.innerHTML = ''; // Limpiar la tabla antes de cargar nuevos datos
+
+            // Comprobar si hay datos
+            if (snapshot.exists()) {
+                // Recorrer cada registro en la base de datos
+                snapshot.forEach((hijoSnapshot) => {
+                    const datos = hijoSnapshot.val();
+                    
+                    // Crear una nueva fila (tr)
+                    const fila = document.createElement('tr');
+                    
+                    // Crear y llenar las celdas (td)
+                    const celdaFecha = document.createElement('td');
+                    celdaFecha.textContent = datos.fecha || 'Sin fecha';
+                    
+                    const celdaFigura = document.createElement('td');
+                    celdaFigura.textContent = datos.Figura || 'Desconocida';
+                    
+                    const celdaDimension = document.createElement('td');
+                    celdaDimension.textContent = datos.Dimension || '-';
+                    
+                    // Agregar las celdas a la fila
+                    fila.appendChild(celdaFecha);
+                    fila.appendChild(celdaFigura);
+                    fila.appendChild(celdaDimension);
+                    
+                    // Agregar la fila completa a la tabla
+                    tbody.appendChild(fila);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No hay datos registrados en la base de datos.</td></tr>';
+            }
+        });
+    </script>
+</body>
+</html>
